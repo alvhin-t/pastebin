@@ -141,14 +141,24 @@ def html_response(start_response, html_content, status='200 OK'):
 
 def serve_static_file(start_response, filepath):
     """Serve static files (CSS, JS, images)."""
+    
+    if static_path.startswith('/static/'):
+        relative_path = static_path[len('/static/'):]
+    else:
+        relative_path = static_path.lstrip('/')
+
     # Security: prevent directory traversal
     if '..' in filepath or filepath.startswith('/'):
         return html_response(start_response, '<h1>403 Forbidden</h1>', '403 Forbidden')
     
     # Construct full path
     base_dir = os.path.dirname(os.path.dirname(__file__))
-    full_path = os.path.join(base_dir, 'frontend', filepath.lstrip('/'))
+    full_path = os.path.normpath(os.path.join(base_dir, 'frontend', relative_path))
     
+    # Extra security: Ensure the resolved path is actually inside the frontend folder
+    if not full_path.startswith(os.path.join(base_dir, 'frontend')):
+         return html_response(start_response, '<h1>403 Forbidden</h1>', '403     Forbidden')
+
     # Check if file exists
     if not os.path.isfile(full_path):
         return html_response(start_response, '<h1>404 Not Found</h1>', '404 Not Found')
