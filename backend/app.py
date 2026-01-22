@@ -14,6 +14,15 @@ from wsgiref.simple_server import make_server
 
 import config
 from db import DatabaseConnection, init_pool, close_pool
+from security import (
+    paste_rate_limiter,
+    view_rate_limiter,
+    validate_paste_content,
+    validate_paste_id,
+    get_client_ip,
+    add_security_headers,
+    check_suspicious_content
+)
 
 
 def generate_paste_id():
@@ -113,6 +122,7 @@ def json_response(start_response, data, status='200 OK'):
         ('Content-Type', 'application/json'),
         ('Content-Length', str(len(response_body)))
     ]
+    headers = add_security_headers(headers)
     start_response(status, headers)
     return [response_body]
 
@@ -124,6 +134,7 @@ def html_response(start_response, html_content, status='200 OK'):
         ('Content-Type', 'text/html; charset=utf-8'),
         ('Content-Length', str(len(response_body)))
     ]
+    headers = add_security_headers(headers)
     start_response(status, headers)
     return [response_body]
 
@@ -208,6 +219,15 @@ def application(environ, start_response):
     
     # Route: Create paste (POST /api/paste)
     elif path == '/api/paste' and method == 'POST':
+        # Rate limiting
+        client_ip = get_client_ip(environ)
+        if not paste_rate_limiter.is_allowed(client_ip):
+            return json_response(
+                start_response,
+                {'error': 'Rate limit exceeded. Please try again later.'},
+                '429 Too Many Requests'
+            )
+        
         body = read_request_body(environ)
         if not body:
             return json_response(
@@ -221,18 +241,22 @@ def application(environ, start_response):
             content = data.get('content', '').strip()
             expiry = data.get('expiry', config.DEFAULT_EXPIRY)
             
-            if not content:
+            # Validate content
+            is_valid, error_msg = validate_paste_content(content)
+            if not is_valid:
                 return json_response(
                     start_response,
-                    {'error': 'Content cannot be empty'},
+                    {'error': error_msg},
                     '400 Bad Request'
                 )
             
-            if len(content.encode('utf-8')) > config.MAX_PASTE_SIZE:
+            # Check for suspicious content
+            is_suspicious, reason = check_suspicious_content(content)
+            if is_suspicious:
                 return json_response(
                     start_response,
-                    {'error': 'Content too large'},
-                    '413 Payload Too Large'
+                    {'error': f'Content rejected: {reason}'},
+                    '400 Bad Request'
                 )
             
             paste_id = create_paste(content, expiry)
@@ -263,44 +287,48 @@ def application(environ, start_response):
     
     # Route: View paste (GET /v/{id})
     elif path.startswith('/v/') and method == 'GET':
-        paste_id = path[3:]  # Remove '/v/' prefix
-        
-        if not paste_id or len(paste_id) != config.PASTE_ID_LENGTH:
+        # Rate limiting
+        client_ip = get_client_ip(environ)
+        if not view_rate_limiter.is_allowed(client_ip):
             return html_response(
                 start_response,
-                '<h1>Invalid paste ID</h1>',
-                '400 Bad Request'
+                '<h1>429 Too Many Requests</h1><p>Please slow down.</p>',
+                '429 Too Many Requests'
             )
+        
+        paste_id = path[3:]  # Remove '/v/' prefix
+        
+        # Validate paste ID
+        if not validate_paste_id(paste_id):
+            html = render_template('view.html', {
+                'paste_id': 'Invalid',
+                'content': 'Invalid paste ID format',
+                'expires_at': 'N/A'
+            })
+            return html_response(start_response, html, '400 Bad Request')
         
         paste = get_paste(paste_id)
         
         if paste:
             # Escape content to prevent XSS
             safe_content = html.escape(paste['content'])
-            html_content = f"""
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Paste {paste_id}</title>
-                <style>
-                    body {{ font-family: monospace; margin: 20px; }}
-                    pre {{ background: #f5f5f5; padding: 15px; border-radius: 5px; }}
-                </style>
-            </head>
-            <body>
-                <h2>Paste {paste_id}</h2>
-                <p>Expires: {paste['expires_at']}</p>
-                <pre>{safe_content}</pre>
-            </body>
-            </html>
-            """
+            html_content = render_template('view.html', {
+                'paste_id': html.escape(paste_id),
+                'content': safe_content,
+                'expires_at': paste['expires_at'].strftime('%Y-%m-%d %H:%M:%S UTC')
+            })
             return html_response(start_response, html_content)
         else:
-            return html_response(
-                start_response,
-                '<h1>404 Not Found</h1><p>This paste does not exist or has expired.</p>',
-                '404 Not Found'
-            )
+            html_content = render_template('view.html', {
+                'paste_id': 'Not Found',
+                'content': 'This paste does not exist or has expired.',
+                'expires_at': 'N/A'
+            })
+            return html_response(start_response, html_content, '404 Not Found')
+    
+    # Route: Static files (GET /static/*)
+    elif path.startswith('/static/') and method == 'GET':
+        return serve_static_file(start_response, path)
     
     # Route: 404 for everything else
     else:
