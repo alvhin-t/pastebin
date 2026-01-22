@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from urllib.parse import parse_qs
 from wsgiref.simple_server import make_server
 
-import config
+from . import config
 from db import DatabaseConnection, init_pool, close_pool
 from security import (
     paste_rate_limiter,
