@@ -13,7 +13,7 @@ from urllib.parse import parse_qs
 from wsgiref.simple_server import make_server
 
 from . import config
-from db import DatabaseConnection, init_pool, close_pool
+from .db import DatabaseConnection, init_pool, close_pool
 from security import (
     paste_rate_limiter,
     view_rate_limiter,
