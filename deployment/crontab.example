@@ -1,0 +1,15 @@
+# Pastebin Cleanup Cron Jobs
+# Alternative to systemd service - choose one approach, not both
+
+# Run cleanup every minute
+* * * * * cd /var/www/pastebin && /var/www/pastebin/venv/bin/python backend/cleanup.py --once >> /var/www/pastebin/logs/cron.log 2>&1
+
+# Run cleanup every 5 minutes (more realistic for production)
+# */5 * * * * cd /var/www/pastebin && /var/www/pastebin/venv/bin/python backend/cleanup.py --once >> /var/www/pastebin/logs/cron.log 2>&1
+
+# Run cleanup every hour
+# 0 * * * * cd /var/www/pastebin && /var/www/pastebin/venv/bin/python backend/cleanup.py --once >> /var/www/pastebin/logs/cron.log 2>&1
+
+# To install this crontab:
+# crontab -e
+# Then paste the desired line above

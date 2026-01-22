@@ -1,0 +1,31 @@
+[Unit]
+Description=Pastebin Cleanup Service
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/pastebin
+Environment="PATH=/var/www/pastebin/venv/bin"
+ExecStart=/var/www/pastebin/venv/bin/python backend/cleanup.py
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/www/pastebin/logs
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=pastebin-cleanup
+
+[Install]
+WantedBy=multi-user.target
