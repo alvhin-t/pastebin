@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Share text snippets with automatic expiry. No registration required.">
+    <title>Pastebin - Share Text with Expiry</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="logo">
+                <span class="logo-icon">📋</span>
+                Pastebin
+            </h1>
+            <p class="tagline">Share text/code snippets with automatic expiry</p>
+        </header>
+
+        <main class="main">
+            <!-- Create Paste Section -->
+            <section class="create-section" id="createSection">
+                <form id="pasteForm" class="paste-form">
+                    <div class="form-group">
+                        <label for="content" class="form-label">
+                            Your Content
+                            <span class="char-count" id="charCount">0 characters</span>
+                        </label>
+                        <textarea 
+                            id="content" 
+                            name="content" 
+                            class="paste-textarea"
+                            placeholder="Paste your text/code here..."
+                            rows="15"
+                            maxlength="1048576"
+                            required
+                            autofocus
+                        ></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="expiry" class="form-label">Expires In</label>
+                            <select id="expiry" name="expiry" class="form-select">
+                                <option value="10min">10 Minutes</option>
+                                <option value="1hour">1 Hour</option>
+                                <option value="1day" selected>1 Day</option>
+                                <option value="1week">1 Week</option>
+                                <option value="1month">1 Month</option>
+                                <option value="never">Never (100 years)</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <span class="btn-text">Create Paste</span>
+                            <span class="btn-loader" style="display: none;">
+                                <span class="spinner"></span>
+                                Creating...
+                            </span>
+                        </button>
+                    </div>
+
+                    <div class="form-notice">
+                        <svg class="notice-icon" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm1 12H7V7h2v5zm0-6H7V4h2v2z"/>
+                        </svg>
+                        <span>Pastes are automatically deleted after expiry. No registration required.</span>
+                    </div>
+                </form>
+
+                <!-- Error Message -->
+                <div class="alert alert-error" id="errorAlert" style="display: none;">
+                    <svg class="alert-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"/>
+                    </svg>
+                    <span id="errorMessage"></span>
+                </div>
+
+                <!-- Success Message -->
+                <div class="alert alert-success" id="successAlert" style="display: none;">
+                    <svg class="alert-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                    </svg>
+                    <div class="success-content">
+                        <p class="success-message">Paste created successfully!</p>
+                        <div class="url-container">
+                            <input 
+                                type="text" 
+                                id="pasteUrl" 
+                                class="url-input" 
+                                readonly 
+                                value=""
+                            >
+                            <button type="button" class="btn btn-secondary" id="copyBtn">
+                                <svg class="btn-icon" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                    <path d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V2z"/>
+                                    <path d="M2 6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1v1a3 3 0 0 1-3 3H2a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3h1v1H2z"/>
+                                </svg>
+                                Copy Link
+                            </button>
+                        </div>
+                        <button type="button" class="btn btn-link" id="newPasteBtn">
+                            Create Another Paste
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>
+                Built by Alvihn using Python WSGI, PostgreSQL, and Vanilla JavaScript
+                <span class="separator">•</span>
+                <a href="https://github.com/alvhin-t/pastebin" target="_blank" rel="noopener">
+                    View Source
+                </a>
+            </p>
+        </footer>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
