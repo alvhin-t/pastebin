@@ -1,0 +1,67 @@
+services:
+  # Web Service
+  - type: web
+    name: pastebin-app
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT backend.app:application
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: pastebin-db
+          property: host
+      - key: DB_NAME
+        fromDatabase:
+          name: pastebin-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: pastebin-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: pastebin-db
+          property: password
+      - key: DB_PORT
+        value: 5432
+      - key: DEBUG
+        value: False
+      - key: CLEANUP_INTERVAL
+        value: 60
+
+  # Background Worker (Cleanup Service)
+  - type: worker
+    name: pastebin-cleanup
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python backend/cleanup.py
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: pastebin-db
+          property: host
+      - key: DB_NAME
+        fromDatabase:
+          name: pastebin-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: pastebin-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: pastebin-db
+          property: password
+      - key: DB_PORT
+        value: 5432
+      - key: CLEANUP_INTERVAL
+        value: 60
+
+databases:
+  - name: pastebin-db
+    databaseName: pastebin
+    plan: free
+    # Run schema on first deploy
+    postgresMajorVersion: 15
