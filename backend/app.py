@@ -6,6 +6,8 @@ Handles HTTP routing and request processing manually.
 import json
 import secrets
 import html
+import os
+import mimetypes
 from datetime import datetime, timezone
 from urllib.parse import parse_qs
 from wsgiref.simple_server import make_server
@@ -126,6 +128,70 @@ def html_response(start_response, html_content, status='200 OK'):
     return [response_body]
 
 
+def serve_static_file(start_response, filepath):
+    """Serve static files (CSS, JS, images)."""
+    # Security: prevent directory traversal
+    if '..' in filepath or filepath.startswith('/'):
+        return html_response(start_response, '<h1>403 Forbidden</h1>', '403 Forbidden')
+    
+    # Construct full path
+    base_dir = os.path.dirname(os.path.dirname(__file__))
+    full_path = os.path.join(base_dir, 'frontend', filepath.lstrip('/'))
+    
+    # Check if file exists
+    if not os.path.isfile(full_path):
+        return html_response(start_response, '<h1>404 Not Found</h1>', '404 Not Found')
+    
+    # Determine content type
+    content_type, _ = mimetypes.guess_type(full_path)
+    if content_type is None:
+        content_type = 'application/octet-stream'
+    
+    try:
+        with open(full_path, 'rb') as f:
+            content = f.read()
+        
+        headers = [
+            ('Content-Type', content_type),
+            ('Content-Length', str(len(content))),
+            ('Cache-Control', 'public, max-age=86400')  # Cache for 1 day
+        ]
+        start_response('200 OK', headers)
+        return [content]
+    
+    except Exception as e:
+        print(f"Error serving static file {filepath}: {e}")
+        return html_response(start_response, '<h1>500 Internal Server Error</h1>', '500 Internal Server Error')
+
+
+def render_template(template_name, context=None):
+    """
+    Simple template rendering with variable substitution.
+    Supports {variable_name} syntax.
+    """
+    if context is None:
+        context = {}
+    
+    base_dir = os.path.dirname(os.path.dirname(__file__))
+    template_path = os.path.join(base_dir, 'frontend', 'templates', template_name)
+    
+    try:
+        with open(template_path, 'r', encoding='utf-8') as f:
+            template = f.read()
+        
+        # Simple variable substitution
+        for key, value in context.items():
+            template = template.replace(f'{{{key}}}', str(value))
+        
+        return template
+    
+    except FileNotFoundError:
+        return f"<h1>Template not found: {template_name}</h1>"
+    except Exception as e:
+        print(f"Error rendering template {template_name}: {e}")
+        return "<h1>Error rendering template</h1>"
+
+
 def application(environ, start_response):
     """
     WSGI application entry point.
@@ -137,24 +203,7 @@ def application(environ, start_response):
     
     # Route: Home page (GET /)
     if path == '/' and method == 'GET':
-        # For now, return a simple HTML page
-        # We'll enhance this in later commits
-        html = """
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Pastebin - Share Text with Expiry</title>
-        </head>
-        <body>
-            <h1>Pastebin</h1>
-            <p>API Endpoints:</p>
-            <ul>
-                <li>POST /api/paste - Create new paste</li>
-                <li>GET /v/{id} - View paste</li>
-            </ul>
-        </body>
-        </html>
-        """
+        html = render_template('index.html')
         return html_response(start_response, html)
     
     # Route: Create paste (POST /api/paste)
