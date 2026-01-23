@@ -139,7 +139,7 @@ def html_response(start_response, html_content, status='200 OK'):
     return [response_body]
 
 
-def serve_static_file(start_response, filepath):
+def serve_static_file(start_response, path):
     """Serve static files (CSS, JS, images)."""
     
     relative_path = path.replace('/static/', '', 1).lstrip('/')
