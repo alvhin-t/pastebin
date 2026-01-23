@@ -149,17 +149,18 @@ def serve_static_file(start_response, path):
         return html_response(start_response, '<h1>403 Forbidden</h1>', '403 Forbidden')
     
     # Construct full path
-    base_dir = os.path.dirname(os.path.dirname(__file__))
-    full_path = os.path.join(base_dir, 'frontend', 'static', relative_path)
+    backend_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(backend_dir)
+    full_path = os.path.join(project_root, 'frontend', 'static', relative_path)
     
     # Extra security: Ensure the resolved path is actually inside the frontend folder
-    if not full_path.startswith(os.path.join(base_dir, 'frontend')):
+    if not full_path.startswith(os.path.join(project_root, 'frontend')):
          return html_response(start_response, '<h1>403 Forbidden</h1>', '403     Forbidden')
 
     # Check if file exists
     if not os.path.isfile(full_path):
-        print(f"DEBUG: File not found at {full_path}") # This will show in Render logs
-        return html_response(start_response, '<h1>404 Not Found</h1>', '404 Not Found')
+        print(f"DEBUG: File not found at {full_path}")
+        return html_response(start_response, '<h1>404 Not Found</h1><p>Path: {full_path}</p>', '404 Not Found')
     
     # Determine content type
     content_type, _ = mimetypes.guess_type(full_path)
@@ -179,7 +180,7 @@ def serve_static_file(start_response, path):
         return [content]
     
     except Exception as e:
-        print(f"Error serving static file {filepath}: {e}")
+        print(f"Error serving static file {path}: {e}")
         return html_response(start_response, '<h1>500 Internal Server Error</h1>', '500 Internal Server Error')
 
 
