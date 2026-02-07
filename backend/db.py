@@ -50,7 +50,7 @@ def close_pool():
         connection_pool.closeall()
         print("✓ Database connection pool closed")
 
-# --- PLACE THE CLASS HERE ---
+
 class DatabaseConnection:
     """Enhanced Context manager for database connections."""
     def __init__(self):
@@ -82,7 +82,7 @@ class DatabaseConnection:
         if self.cursor: self.cursor.close()
         if self.conn: return_connection(self.conn)
 
-# --- FUNCTIONS BELOW USE THE CLASS ---
+
 def ensure_tables_exist():
     try:
         # Note: We call db.execute() now, not cursor.execute()
@@ -98,6 +98,18 @@ def ensure_tables_exist():
             print("✓ Database table 'pastes' verified/created")
     except Exception as e:
         print(f"✗ Error creating tables: {e}")
+
+def cleanup_expired_pastes():
+    """Delete all pastes that have reached their expiration time."""
+    try:
+        with DatabaseConnection() as db:
+            db.execute("DELETE FROM pastes WHERE expires_at < NOW()")
+            # In PostgreSQL, rowcount tells us how many rows were deleted
+            deleted_count = db.cursor.rowcount 
+            if deleted_count > 0:
+                print(f"🧹 Cleanup: Removed {deleted_count} expired pastes.")
+    except Exception as e:
+        print(f"✗ Cleanup failed: {e}")
 
 def test_connection():
     try:
