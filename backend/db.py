@@ -121,6 +121,24 @@ def test_connection():
     except Exception as e:
         return False
 
+def get_recent_pastes(limit=10):
+    """Retrieve the most recent public pastes."""
+    try:
+        with DatabaseConnection() as db:
+            db.execute(
+                """
+                SELECT id, created_at 
+                FROM pastes 
+                WHERE expires_at > NOW() 
+                ORDER BY created_at DESC 
+                LIMIT %s
+                """,
+                (limit,)
+            )
+            return db.cursor.fetchall()
+    except Exception:
+        return []
+
 if __name__ == "__main__":
     init_pool()
     test_connection()

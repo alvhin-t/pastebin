@@ -149,37 +149,74 @@ def application(environ, start_response):
     path = environ.get('PATH_INFO', '/')
     method = environ.get('REQUEST_METHOD', 'GET')
     
+    # Route: Home page (GET /)
     if path == '/' and method == 'GET':
-        return html_response(start_response, render_template('index.html'))
+        # Import inside the route to avoid circular imports if db.py imports app
+        from .db import get_recent_pastes
+        
+        recent = get_recent_pastes(limit=10)
+        
+        # Build the HTML list for the sidebar
+        recent_links = ""
+        for p_id, created_at in recent:
+            # We use UTC time for the display
+            time_str = created_at.strftime("%H:%M")
+            recent_links += f'<li><a href="/v/{p_id}">{p_id}</a> <small class="text-muted">{time_str} UTC</small></li>'
+        
+        if not recent_links:
+            recent_links = "<li>No recent pastes yet.</li>"
+
+        # Pass the generated HTML list to the index template
+        return html_response(start_response, render_template('index.html', {
+            'recent_pastes': f'<ul class="recent-list">{recent_links}</ul>'
+        }))
     
+    # Route: Create paste (POST /api/paste)
     elif path == '/api/paste' and method == 'POST':
         client_ip = get_client_ip(environ)
         if not paste_rate_limiter.is_allowed(client_ip):
             return json_response(start_response, {'error': 'Too many requests'}, '429 Too Many Requests')
         
         body = read_request_body(environ)
-        if not body: return json_response(start_response, {'error': 'No content'}, '400 Bad Request')
+        if not body: 
+            return json_response(start_response, {'error': 'No content'}, '400 Bad Request')
         
         try:
             data = json.loads(body)
             content = data.get('content', '').strip()
             expiry = data.get('expiry', config.DEFAULT_EXPIRY)
             
+            # Validation
             is_valid, error_msg = validate_paste_content(content)
-            if not is_valid: return json_response(start_response, {'error': error_msg}, '400 Bad Request')
+            if not is_valid: 
+                return json_response(start_response, {'error': error_msg}, '400 Bad Request')
             
             is_suspicious, reason = check_suspicious_content(content)
-            if is_suspicious: return json_response(start_response, {'error': f'Rejected: {reason}'}, '400 Bad Request')
+            if is_suspicious: 
+                return json_response(start_response, {'error': f'Rejected: {reason}'}, '400 Bad Request')
             
             paste_id = create_paste(content, expiry)
-            return json_response(start_response, {'success': True, 'id': paste_id, 'url': f'/v/{paste_id}'}, '201 Created') if paste_id else json_response(start_response, {'error': 'Database error'}, '500 Internal Server Error')
+            if paste_id:
+                return json_response(start_response, {
+                    'success': True, 
+                    'id': paste_id, 
+                    'url': f'/v/{paste_id}'
+                }, '201 Created')
+            else:
+                return json_response(start_response, {'error': 'Database error'}, '500 Internal Server Error')
+                
         except Exception:
             return json_response(start_response, {'error': 'Invalid request'}, '400 Bad Request')
 
+    # Route: View paste (GET /v/{id})
     elif path.startswith('/v/') and method == 'GET':
         paste_id = path[3:]
         if not validate_paste_id(paste_id):
-            return html_response(start_response, render_template('view.html', {'paste_id': 'Error', 'content': 'Invalid ID', 'expires_at': 'N/A'}), '400 Bad Request')
+            return html_response(start_response, render_template('view.html', {
+                'paste_id': 'Error', 
+                'content': 'Invalid ID format', 
+                'expires_at': 'N/A'
+            }), '400 Bad Request')
         
         paste = get_paste(paste_id)
         if paste:
@@ -188,13 +225,19 @@ def application(environ, start_response):
                 'content': html.escape(paste['content']),
                 'expires_at': paste['expires_at'].strftime('%Y-%m-%d %H:%M:%S UTC')
             }))
-        return html_response(start_response, render_template('view.html', {'paste_id': '404', 'content': 'Paste expired or not found', 'expires_at': 'N/A'}), '404 Not Found')
+        
+        return html_response(start_response, render_template('view.html', {
+            'paste_id': '404', 
+            'content': 'Paste expired or not found', 
+            'expires_at': 'N/A'
+        }), '404 Not Found')
 
+    # Route: Static files
     elif path.startswith('/static/') and method == 'GET':
         return serve_static_file(start_response, path)
     
+    # Fallback: 404
     return html_response(start_response, '<h1>404 Not Found</h1>', '404 Not Found')
-
 if __name__ == '__main__':
     with make_server(config.HOST, config.PORT, application) as httpd:
         print(f"🚀 Dev server: http://{config.HOST}:{config.PORT}")

@@ -1,0 +1,2 @@
+web: gunicorn backend.app:application
+worker: python backend/cleanup.py

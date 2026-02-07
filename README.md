@@ -32,7 +32,6 @@ This project deliberately avoids frameworks like Flask or Django to demonstrate:
 4. **Frontend Skills** - Vanilla JavaScript with modern APIs, no React/Vue crutches
 5. **Performance** - Minimal dependencies, optimized queries, efficient resource usage
 
-
 ## 📚 Tech Stack
 
 - **Backend**: Python 3.x (WSGI, no frameworks)
@@ -41,24 +40,18 @@ This project deliberately avoids frameworks like Flask or Django to demonstrate:
 - **Deployment**: Gunicorn, Systemd, Nginx
 - **Testing**: Pytest with >80% coverage
 
-
 ## 🚀 Quick Start
 
-### Prerequisites
-
-- Python 3.8+
-- PostgreSQL 12+
-
-### Installation
+### Development Setup
 
 ```bash
-# Clone the repository
-git clone
+# Clone repository
+git clone <your-repo-url>
 cd pastebin
 
 # Create virtual environment
 python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
@@ -67,18 +60,9 @@ pip install -r requirements.txt
 createdb pastebin
 psql -d pastebin -f database/schema.sql
 
-### Configuration
-
+# Configure environment
 cp .env.example .env
-# Create & Edit .env with your database credentials
-
-```
-DB_HOST=localhost
-DB_NAME=pastebin
-DB_USER=your_username
-DB_PASSWORD=your_password
-DB_PORT=5432
-```
+# Edit .env with your database credentials
 
 # Run tests
 pytest
@@ -94,13 +78,11 @@ Visit `http://localhost:8000` in your browser.
 
 ### Production Deployment
 
-See [deployment/DEPLOYMENT.md](deployment/DEPLOYMENT.md) for comprehensive production 
-setup instructions including:
+See [deployment/DEPLOYMENT.md](deployment/DEPLOYMENT.md) for comprehensive production setup instructions including:
 - Systemd service configuration
 - Nginx reverse proxy setup
 - Security hardening
 - Monitoring and maintenance
-
 
 ## 📖 API Usage
 
@@ -164,28 +146,94 @@ CREATE INDEX idx_pastes_expires_at ON pastes(expires_at);
 - **SQL Injection**: Parameterized queries, no string concatenation
 - **Path Traversal**: Static file validation, directory restrictions
 
+## 🧪 Testing
 
-## Project Structure
+```bash
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=backend --cov-report=html
+
+# Run specific test file
+pytest tests/test_api.py
+
+# Run only unit tests
+pytest -m unit
+
+# Run only integration tests  
+pytest -m integration
+```
+
+Test coverage: >80% across all modules
+
+## 📁 Project Structure
 
 ```
 pastebin/
-├── database/          # SQL schemas and migrations
-├── backend/           # Python WSGI application
-├── frontend/          # Static assets and templates
-└── README.md
+|── backend/
+|   |── app.py              # WSGI application & routing
+│   |── db.py               # Database connection pooling
+|   |── config.py           # Configuration management
+|   |── cleanup.py          # Background cleanup service
+|   |── security.py         # Rate limiting & validation
+|── frontend/
+|   |── templates/          # HTML templates
+|   │   |── index.html
+|   |   |── view.html
+|   |── static/
+|       |── css/
+|       │   └── style.css
+|       |── js/
+|           |── app.js      # Paste creation logic
+│           |── view.js     # Paste viewing logic
+|── database/
+|   |── schema.sql          # Database schema
+|── deployment/
+|   |── pastebin-app.service
+|   |── pastebin-cleanup.service
+|   |── crontab.example
+|   |── DEPLOYMENT.md
+|── tests/
+|   |── conftest.py
+|   |── test_database.py
+|   |── test_api.py
+|   |── test_config.py
+|   |── test_cleanup.py
+|── docs/
+│   |── API.md
+|── .env.example
+|── .gitignore
+|── requirements.txt
+|── pytest.ini
+|── CONTRIBUTING.md
+|── README.md
 ```
 
-## Development Roadmap
+## 🎓 What This Demonstrates
 
-- [x] Project initialization
-- [x] Database schema
-- [x] WSGI routing
-- [x] Paste creation API
-- [x] Paste retrieval
-- [x] Background cleanup
-- [ ] Frontend interface
-- [ ] Clipboard API integration
+### Backend Skills
+- ✅ Manual WSGI implementation (no Flask/Django)
+- ✅ SQL with connection pooling and indexes
+- ✅ Background processes and daemon management
+- ✅ Security best practices (rate limiting, validation, XSS prevention)
+- ✅ Comprehensive error handling
 
-## License
+### Frontend Skills
+- ✅ Vanilla JavaScript with modern APIs (Fetch, Clipboard)
+- ✅ Progressive enhancement and accessibility
+- ✅ Responsive CSS without frameworks
+- ✅ Client-side validation and UX polish
 
-MIT
+### DevOps Skills
+- ✅ Systemd service configuration
+- ✅ Production deployment documentation
+- ✅ Database management and migrations
+- ✅ Logging and monitoring setup
+
+### Professional Practices
+- ✅ Comprehensive testing (unit + integration)
+- ✅ Git workflow with meaningful commits
+- ✅ API documentation
+- ✅ Contributing guidelines
+- ✅ Security considerations
