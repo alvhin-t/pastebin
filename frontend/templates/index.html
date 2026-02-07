@@ -6,6 +6,7 @@
     <meta name="description" content="Share text snippets with automatic expiry. No registration required.">
     <title>Pastebin - Share Text with Expiry</title>
     <link rel="stylesheet" href="/static/css/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
@@ -18,6 +19,15 @@
         </header>
 
         <main class="main">
+            <div class="container">
+                <main class="editor-section">
+                    </main>
+    
+                <aside class="sidebar">
+                    <h3>Recently Created</h3>
+                    {recent_pastes}
+                </aside>
+             </div>
             <!-- Create Paste Section -->
             <section class="create-section" id="createSection">
                 <form id="pasteForm" class="paste-form">
