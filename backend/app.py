@@ -53,7 +53,7 @@ def create_paste(content, expiry_key):
     paste_id = generate_paste_id()
     
     try:
-        with DatabaseConnection() db:  # db is now the instance, not the cursor
+        with DatabaseConnection() as db:  # db is now the instance, not the cursor
             db.execute(
                 """
                 INSERT INTO pastes (id, content, expires_at)
@@ -79,8 +79,8 @@ def get_paste(paste_id):
         Paste content if found and not expired, None otherwise
     """
     try:
-        with DatabaseConnection() as cursor:
-            cursor.execute(
+        with DatabaseConnection() as db:
+            db.execute(
                 """
                 SELECT content, expires_at 
                 FROM pastes 
@@ -88,12 +88,11 @@ def get_paste(paste_id):
                 """,
                 (paste_id,)
             )
-            result = cursor.fetchone()
+            result = db.fetchone()
             if result:
                 return {'content': result[0], 'expires_at': result[1]}
             return None
-    except Exception as e:
-        print(f"Error retrieving paste: {e}")
+    except Exception:
         return None
 
 
@@ -215,6 +214,14 @@ def setup_app():
     ensure_tables_exist()
 
 setup_app()
+
+
+def startup_tasks():
+    ensure_tables_exist()
+    cleanup_expired_pastes()  # Clear out old data on boot
+    print("🚀 All startup tasks complete.")
+
+startup_tasks()
 
 def application(environ, start_response):
     """
