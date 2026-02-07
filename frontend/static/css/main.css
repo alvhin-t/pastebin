@@ -56,12 +56,14 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 
-                 'Helvetica Neue', Arial, sans-serif;
+                 'Helvetica Neue', system-ui, -apple-system, Arial, sans-serif;
     line-height: 1.6;
     color: var(--text-primary);
     background: var(--bg-secondary);
     min-height: 100vh;
     display: flex;
+    margin: 0;
+    padding: 0;
     flex-direction: column;
 }
 
@@ -70,10 +72,13 @@ body {
    ============================================ */
 
 .container {
-    max-width: 900px;
+    display: flex;
+    gap: var(--spacing-lg)
+    max-width: 1200px;
     margin: 0 auto;
     padding: var(--spacing-xl);
     width: 100%;
+    align-items: flex-start;
 }
 
 .main {
@@ -528,6 +533,77 @@ body {
     }
 }
 
+/* Main Editor Section */
+.editor-section {
+    flex: 1;
+    background: var(--bg-primary);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    shadow: var(--shadow-md);
+}
+
+/* Sidebar Styling */
+.sidebar {
+    width: 280px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md);
+    box-shadow: var(--shadow-sm);
+    position: sticky;
+    top: var(--spacing-md);
+}
+
+.sidebar h3 {
+    margin-top: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: var(--spacing-sm);
+}
+
+/* Recent List Styling */
+.recent-list {
+    list-style: none;
+    padding: 0;
+    margin: var(--spacing-sm) 0 0 0;
+}
+
+.recent-list li {
+    padding: var(--spacing-sm) 0;
+    border-bottom: 1px solid var(--bg-tertiary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: var(--transition);
+}
+
+.recent-list li:last-child {
+    border-bottom: none;
+}
+
+.recent-list a {
+    color: var(--primary);
+    text-decoration: none;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.recent-list a:hover {
+    color: var(--primary-hover);
+    text-decoration: underline;
+}
+
+.text-muted {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+
 @media (max-width: 480px) {
     .paste-form {
         padding: var(--spacing-md);
@@ -535,5 +611,16 @@ body {
     
     .view-section {
         padding: var(--spacing-md);
+    }
+    
+    .container {
+        flex-direction: column;
+        padding: var(--spacing-md);
+    }
+    
+    .sidebar {
+        width: 100%;
+        position: static;
+        box-sizing: border-box;
     }
 }
