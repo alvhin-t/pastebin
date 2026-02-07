@@ -53,8 +53,8 @@ def create_paste(content, expiry_key):
     paste_id = generate_paste_id()
     
     try:
-        with DatabaseConnection() as cursor:
-            cursor.execute(
+        with DatabaseConnection() db:  # db is now the instance, not the cursor
+            db.execute(
                 """
                 INSERT INTO pastes (id, content, expires_at)
                 VALUES (%s, %s, %s)
@@ -62,10 +62,9 @@ def create_paste(content, expiry_key):
                 """,
                 (paste_id, content, expires_at)
             )
-            result = cursor.fetchone()
+            result = db.fetchone()
             return result[0] if result else None
-    except Exception as e:
-        print(f"Error creating paste: {e}")
+    except Exception:
         return None
 
 
@@ -183,7 +182,6 @@ def serve_static_file(start_response, path):
         print(f"Error serving static file {path}: {e}")
         return html_response(start_response, '<h1>500 Internal Server Error</h1>', '500 Internal Server Error')
 
-
 def render_template(template_name, context=None):
     """
     Simple template rendering with variable substitution.
@@ -211,6 +209,12 @@ def render_template(template_name, context=None):
         print(f"Error rendering template {template_name}: {e}")
         return "<h1>Error rendering template</h1>"
 
+def setup_app():
+    """Perform all one-time startup tasks."""
+    init_pool()
+    ensure_tables_exist()
+
+setup_app()
 
 def application(environ, start_response):
     """
